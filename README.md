@@ -71,6 +71,19 @@ Found 2 matching customer(s):
 - ID: 9 | Name: David Johnson | Email: david.j@gmail.com
 ```
 
+### Searching with Diacritics / Accents
+Search is case- and accent-insensitive, matching records regardless of tildes or diacritics:
+```bash
+python -m src.entrypoints.cli --query "maría"
+```
+
+**Example Output:**
+```text
+Found 1 matching customer(s):
+- ID: 3 | Name: Maria Garcia | Email: maria.garcia@example.com
+```
+
+
 ### Searching with No Matches
 ```bash
 python -m src.entrypoints.cli --query "xyz123"

@@ -121,3 +121,50 @@ def test_search_special_characters_dots_and_subdomain() -> None:
     for customer in results:
         assert ".com" in customer.email
 
+
+def test_search_accent_insensitivity_accented_query() -> None:
+    """Accented queries match unaccented records in default dataset."""
+    service = CustomerSearchService()
+
+    results_maria = service.search("maría")
+    assert any(c.name == "Maria Garcia" for c in results_maria)
+
+    results_garcia = service.search("García")
+    assert any(c.name == "Maria Garcia" for c in results_garcia)
+
+    results_lucia = service.search("Lucía")
+    assert any(c.name == "Lucia Fernandez" for c in results_lucia)
+
+    results_mendez = service.search("Méndez")
+    assert any(c.name == "Carlos Mendez" for c in results_mendez)
+
+
+def test_search_accent_insensitivity_accented_record() -> None:
+    """Unaccented queries match records stored with accents."""
+    custom_records = [
+        Customer(id="201", name="Sofía López", email="sofia.l@example.com"),
+        Customer(id="202", name="Andrés Peña", email="andres.p@example.com"),
+    ]
+    repo = InMemoryCustomerRepository(customers=custom_records)
+    service = CustomerSearchService(repository=repo)
+
+    results_sofia = service.search("sofia")
+    assert len(results_sofia) == 1
+    assert results_sofia[0].name == "Sofía López"
+
+    results_lopez = service.search("lopez")
+    assert len(results_lopez) == 1
+    assert results_lopez[0].name == "Sofía López"
+
+    results_pena = service.search("pena")
+    assert len(results_pena) == 1
+    assert results_pena[0].name == "Andrés Peña"
+
+
+def test_search_accent_and_case_insensitivity_combined() -> None:
+    """Combined mixed case and accented query matches record."""
+    service = CustomerSearchService()
+    results = service.search("mArÍa")
+
+    assert any(c.name == "Maria Garcia" for c in results)
+
