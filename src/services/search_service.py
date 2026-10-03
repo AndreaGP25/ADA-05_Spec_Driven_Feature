@@ -1,5 +1,6 @@
 """Customer search service module."""
 
+import unicodedata
 from typing import List, Optional
 
 from src.domain.exceptions import InvalidQueryError
@@ -24,8 +25,21 @@ class CustomerSearchService:
             repository if repository is not None else InMemoryCustomerRepository()
         )
 
+    @staticmethod
+    def _normalize(text: str) -> str:
+        """Normalize text by converting to lowercase and removing accents/diacritics.
+        
+        Args:
+            text: Input string to normalize.
+            
+        Returns:
+            Normalized lowercase string without diacritical marks.
+        """
+        decomposed = unicodedata.normalize("NFKD", text)
+        return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).lower()
+
     def search(self, query: str) -> List[Customer]:
-        """Search customers by name or email using case-insensitive partial match.
+        """Search customers by name or email using case- and accent-insensitive partial match.
         
         Args:
             query: The search query string.
@@ -46,14 +60,15 @@ class CustomerSearchService:
         if len(trimmed_query) < 2:
             raise InvalidQueryError("Query must be at least 2 characters long")
 
-        normalized_query = trimmed_query.lower()
+        normalized_query = self._normalize(trimmed_query)
 
         results: List[Customer] = []
         for customer in self._repository.get_all():
             if (
-                normalized_query in customer.name.lower()
-                or normalized_query in customer.email.lower()
+                normalized_query in self._normalize(customer.name)
+                or normalized_query in self._normalize(customer.email)
             ):
                 results.append(customer)
 
         return results
+

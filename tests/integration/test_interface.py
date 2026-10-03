@@ -93,3 +93,16 @@ def test_cli_subprocess_end_to_end_validation_failure() -> None:
 
     assert result.returncode == 1
     assert "Error: Query must be at least 2 characters long" in result.stderr
+
+
+def test_cli_search_accented_query_matches() -> None:
+    """Test CLI search correctly matches records when given accented queries."""
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+
+    exit_code = run_search("maría", stdout=stdout, stderr=stderr)
+
+    assert exit_code == 0
+    assert stderr.getvalue() == ""
+    assert "Maria Garcia" in stdout.getvalue()
+
